@@ -1,18 +1,41 @@
 package zarj.ztest.UI;
 
+import com.google.common.collect.Multimap;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtDouble;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.network.message.SentMessage;
+import net.minecraft.registry.Registries;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import zarj.ztest.ZarjTest;
+import zarj.ztest.tochka.TochkaItems;
+import zarj.ztest.tochka.TochkaLow;
+import zarj.ztest.utils.ZLogger;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class TochkaScreenHandler extends ScreenHandler {
     private final Inventory inventory;
-
+    private static final String MODIFIER_PREFIX = "zsharpen.lvl";
+    private static final String MODIFIER_ARMOR_PREFIX = "zsharpen.armor.lvl";
     public TochkaScreenHandler(int syncId, PlayerInventory playerInventory) {
         this(syncId, playerInventory, new SimpleInventory(9));
     }
@@ -24,6 +47,8 @@ public class TochkaScreenHandler extends ScreenHandler {
         int m;
         int l;
         this.addSlot(new IconSlot(inventory, 0, 20,  25, "textures/gui/slot1.png", 20));
+        this.addSlot(new IconSlot(inventory, 1, 140,  25, "textures/gui/slot1.png", 20));
+
         //this.addSlot(new IconSlot(inventory, 0, 20,  25, Identifier.of("zarjtest", "textures/gui/slot1.png") ));
         for (m = 0; m < 3; ++m) {
             for (l = 0; l < 9; ++l) {

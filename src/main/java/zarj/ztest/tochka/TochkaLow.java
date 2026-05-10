@@ -16,15 +16,19 @@ import org.jetbrains.annotations.Nullable;
 import zarj.ztest.UI.TochkaScreenHandler;
 
 import java.util.List;
+import java.util.Random;
 
 public class TochkaLow  extends Item {
     protected final int maxLevel;
-    protected final int baseChance;
+    protected final double baseChance;
+    protected final double decr;
+    public Random rand = new Random();
 
-    public TochkaLow(Settings properties, int maxLevel, int baseChance) {
+    public TochkaLow(Settings properties, int maxLevel, double baseChance, double decr) {
         super(properties);
         this.maxLevel = maxLevel;
         this.baseChance = baseChance;
+        this.decr = decr;
     }
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
@@ -38,11 +42,23 @@ public class TochkaLow  extends Item {
             return new TochkaScreenHandler(syncId, inv);
         }, Text.literal("Заточка оружия"));
     }
+    public boolean isEnoughLevel(int lvl){
+        return lvl<maxLevel;
+    }
+    public int getMaxLevel(){
+        return maxLevel;
+    }
+
     // :::2
     // :::3
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext tooltipContext) {
         tooltip.add(Text.translatable("itemTooltip.zmod.tochka-low"));
+    }
+    public boolean willUpgrade(int level) {
+        double new_chance=baseChance-(decr*level);
+        double fill =  rand.nextDouble(0.0, 100.0);
+        return fill<=new_chance;
     }
 
 }

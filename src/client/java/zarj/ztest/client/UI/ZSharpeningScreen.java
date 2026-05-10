@@ -1,13 +1,20 @@
 package zarj.ztest.client.UI;
 
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import zarj.ztest.Net.ModPackets;
 import zarj.ztest.UI.IconSlot;
 import zarj.ztest.UI.TochkaScreenHandler;
+import zarj.ztest.utils.ZLogger;
+
+import java.util.logging.Logger;
 
 public class ZSharpeningScreen extends HandledScreen<TochkaScreenHandler> {
 
@@ -36,5 +43,24 @@ public class ZSharpeningScreen extends HandledScreen<TochkaScreenHandler> {
         renderBackground(context); // Затемнение заднего плана
         super.render(context, mouseX, mouseY, delta);
         drawMouseoverTooltip(context, mouseX, mouseY); // Тултипы предметов
+    }
+    @Override
+    protected void init() {
+        super.init();
+        // Центрируем кнопку относительно фона
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2;
+        ZLogger.Text("ИНИЦИАЛИЗАЦИЯ!");
+        // Добавляем кнопку
+        this.addDrawableChild(ButtonWidget.builder(Text.literal("Заточить"), button -> {
+                    onButtonClick();
+                })
+                .dimensions(x +55, y + 45, 60, 20) // Позиция внутри UI и размер
+                .build());
+    }
+
+    private void onButtonClick() {
+        ZLogger.Text("КНОПКА В UI НАЖАТА!");
+        ClientPlayNetworking.send(ModPackets.SHARPEN_START_PACKET_ID, PacketByteBufs.create());
     }
 }
