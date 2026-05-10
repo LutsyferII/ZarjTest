@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -94,8 +95,15 @@ public class TochkaScreenHandler extends ScreenHandler {
             return;
         }
         ZLogger.Text("ТЕСТ: ПРОВЕРКА ЗАТОЧКИ ПРОЙДЕНА!!");
-        boolean haveDamage = inputStack.getAttributeModifiers(EquipmentSlot.MAINHAND).containsKey(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        boolean haveArmor = inputStack.getAttributeModifiers(EquipmentSlot.CHEST).containsKey(EntityAttributes.GENERIC_ARMOR);
+        EquipmentSlot slot;
+        if (inputStack.getItem() instanceof ArmorItem armorItem) {
+            slot = armorItem.getSlotType(); // HEAD, CHEST, LEGS, FEET
+        } else {
+            slot = EquipmentSlot.MAINHAND; // или OFFHAND для инструментов
+        }
+        boolean haveDamage = inputStack.getAttributeModifiers(slot).containsKey(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+
+        boolean haveArmor = inputStack.getAttributeModifiers(slot).containsKey(EntityAttributes.GENERIC_ARMOR);
         if(!haveDamage && !haveArmor){
             player.sendMessage(Text.of("§cОшибка: Этот предмет нельзя заточить!!!"), false);
             return;
@@ -137,6 +145,24 @@ public class TochkaScreenHandler extends ScreenHandler {
                     }
                     nbt.put("AttributeModifiers", attrList);
                 }
+                if(haveArmor){
+                    NbtList armorHistory =  nbt.getList("ZArmorHistory", 6);
+                    double decrimer = armorHistory.getDouble(level-1);
+                    armorHistory.remove(level-1);
+                    nbt.put("ZArmorHistory", armorHistory);
+                    NbtList attrList = nbt.getList("AttributeModifiers",10);
+                    for(NbtElement elem : attrList){
+                        NbtCompound comp = (NbtCompound) elem;
+                        String attrName = comp.getString("AttributeName");
+                        String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ARMOR).toString();
+                        if(attrName.equals(expected )){
+                            double amount = comp.getDouble("Amount") - decrimer;
+                            comp.putDouble("Amount", amount);
+                            break;
+                        }
+                    }
+                    nbt.put("AttributeModifiers", attrList);
+                }
 
                 result.setNbt(nbt);
                 this.getSlot(0).setStack(result);
@@ -146,42 +172,22 @@ public class TochkaScreenHandler extends ScreenHandler {
         int newLevel = level + 1;
         nbt.putInt("ZSharpenLevel", newLevel);
 
+        if(level==0&&!nbt.contains("AttributeModifiers")){
+            NbtList modifiers = new NbtList();
+            for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : inputStack.getItem().getAttributeModifiers(slot).entries()) {
 
+                EntityAttribute attribute = entry.getKey();
+                EntityAttributeModifier modifier = entry.getValue();
+                NbtCompound mod = AttributeToNBT(attribute,modifier,slot);
+                modifiers.add(mod);
+            }
+            nbt.put("AttributeModifiers", modifiers);
+        }
         if(haveDamage){
             double baseDamage = getTotalBaseDamage(inputStack);
             ZLogger.Text("ТЕСТ: final baseDamage = "+baseDamage);
             double bonus = baseDamage*0.2;
-            if(level==0&&!nbt.contains("AttributeModifiers")){
-                NbtList modifiers = new NbtList();
-                for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry :
-                        inputStack.getItem().getAttributeModifiers(EquipmentSlot.MAINHAND).entries()) {
 
-                    EntityAttribute attribute = entry.getKey();
-                    EntityAttributeModifier modifier = entry.getValue();
-                    NbtCompound mod = new NbtCompound();
-
-                    // AttributeName: "minecraft:generic.attack_damage"
-                    Identifier attrId = Registries.ATTRIBUTE.getId(attribute);
-                    mod.putString("AttributeName", attrId.toString());
-
-                    mod.putString("Name", modifier.getName());
-                    mod.putUuid("UUID", modifier.getId());
-                    mod.putDouble("Amount", modifier.getValue());
-
-                    // Operation: 0=ADDITION, 1=MULTIPLY_BASE, 2=MULTIPLY_TOTAL
-                    int opId;
-                    if (modifier.getOperation() == EntityAttributeModifier.Operation.ADDITION) opId = 0;
-                    else if (modifier.getOperation() == EntityAttributeModifier.Operation.MULTIPLY_BASE) opId = 1;
-                    else opId = 2;
-                    mod.putInt("Operation", opId);
-
-                    // Slot: "mainhand", "chest" и т.д.
-                    mod.putString("Slot", EquipmentSlot.MAINHAND.getName());
-
-                    modifiers.add(mod);
-                }
-                nbt.put("AttributeModifiers", modifiers);
-            }
             NbtList attrList = nbt.getList("AttributeModifiers",10);
             for(NbtElement elem : attrList){
                 NbtCompound comp = (NbtCompound) elem;
@@ -200,10 +206,23 @@ public class TochkaScreenHandler extends ScreenHandler {
 
         }
         if (haveArmor) {
-            double baseArmor = getTotalBaseArmor(inputStack);
-            double bonus = baseArmor * 0.2 * newLevel;
-            addModifier(nbt, buildModifierName(newLevel, false, true),
-                    "generic.armor", bonus, "chest");
+            double baseArmor = getTotalBaseArmor(inputStack, slot);
+            double bonus = baseArmor * 0.1;
+            NbtList attrList = nbt.getList("AttributeModifiers",10);
+            for(NbtElement elem : attrList){
+                NbtCompound comp = (NbtCompound) elem;
+                String attrName = comp.getString("AttributeName");
+                String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ARMOR).toString();
+                if(attrName.equals(expected )){
+                    double amount = comp.getDouble("Amount") + bonus;
+                    comp.putDouble("Amount", amount);
+                    break;
+                }
+            }
+            nbt.put("AttributeModifiers", attrList);
+            NbtList armorHist =nbt.getList("ZArmorHistory",6);
+            armorHist.add(NbtDouble.of(bonus));
+            nbt.put("ZArmorHistory", armorHist);
         }
         result.setNbt(nbt);
         this.getSlot(0).setStack(result);
@@ -215,61 +234,30 @@ public class TochkaScreenHandler extends ScreenHandler {
         return MODIFIER_PREFIX + level;
     }
 
-    private void changeModifier(NbtCompound nbt, String name, String attributeName,
-                                double amount, String slot){
-        nbt.putDouble("Amount",amount);
+
+    public NbtCompound AttributeToNBT(EntityAttribute attribute, EntityAttributeModifier modifier, EquipmentSlot slot){
+        NbtCompound mod = new NbtCompound();
+
+        // AttributeName: "minecraft:generic.attack_damage"
+        Identifier attrId = Registries.ATTRIBUTE.getId(attribute);
+        mod.putString("AttributeName", attrId.toString());
+
+        mod.putString("Name", modifier.getName());
+        mod.putUuid("UUID", modifier.getId());
+        mod.putDouble("Amount", modifier.getValue());
+
+        // Operation: 0=ADDITION, 1=MULTIPLY_BASE, 2=MULTIPLY_TOTAL
+        int opId;
+        if (modifier.getOperation() == EntityAttributeModifier.Operation.ADDITION) opId = 0;
+        else if (modifier.getOperation() == EntityAttributeModifier.Operation.MULTIPLY_BASE) opId = 1;
+        else opId = 2;
+        mod.putInt("Operation", opId);
+
+        // Slot: "mainhand", "chest" и т.д.
+        mod.putString("Slot", slot.getName());
+        return mod;
     }
 
-
-
-    private void addModifier(NbtCompound nbt, String name, String attributeName,
-                             double amount, String slot) {
-        NbtList modifiers = nbt.getList("AttributeModifiers", NbtElement.COMPOUND_TYPE);
-        if (modifiers == null) {
-            modifiers = new NbtList();
-        }
-
-        NbtCompound modifier = new NbtCompound();
-        modifier.putString("AttributeName", attributeName);
-        modifier.putString("Name", name);
-        // UUID на основе имени — всегда одинаковый для одного имени
-        UUID uuid = UUID.nameUUIDFromBytes(name.getBytes());
-        modifier.putUuid("UUID", uuid);
-        modifier.putDouble("Amount", amount);
-        modifier.putInt("Operation", 0); // Addition
-        modifier.putString("Slot", slot);
-
-        modifiers.add(modifier);
-        nbt.put("AttributeModifiers", modifiers);
-    }
-    private void removeModifierByName(NbtCompound nbt, String nameToRemove) {
-        if (!nbt.contains("AttributeModifiers", NbtElement.LIST_TYPE)) {
-            return;
-        }
-
-        NbtList oldList = nbt.getList("AttributeModifiers", NbtElement.COMPOUND_TYPE);
-        NbtList newList = new NbtList();
-        boolean removed = false;
-
-        for (int i = 0; i < oldList.size(); i++) {
-            NbtCompound modifier = oldList.getCompound(i);
-            String name = modifier.getString("Name");
-
-            if (name.equals(nameToRemove)) {
-                removed = true; // Пропускаем (удаляем) этот
-                continue;
-            }
-            newList.add(modifier);
-        }
-
-        if (removed) {
-            if (newList.isEmpty()) {
-                nbt.remove("AttributeModifiers");
-            } else {
-                nbt.put("AttributeModifiers", newList);
-            }
-        }
-    }
     private double getTotalBaseDamage(ItemStack stack) {
         double total = 1;
         var modifiers = stack.getAttributeModifiers(EquipmentSlot.MAINHAND)
@@ -280,9 +268,9 @@ public class TochkaScreenHandler extends ScreenHandler {
         return total;
     }
 
-    private double getTotalBaseArmor(ItemStack stack) {
+    private double getTotalBaseArmor(ItemStack stack, EquipmentSlot slot) {
         double total = 0;
-        var modifiers = stack.getAttributeModifiers(EquipmentSlot.CHEST)
+        var modifiers = stack.getAttributeModifiers(slot)
                 .get(EntityAttributes.GENERIC_ARMOR);
         for (EntityAttributeModifier mod : modifiers) {
             total += mod.getValue();
