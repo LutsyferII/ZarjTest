@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import zarj.ztest.ZarjTest;
@@ -14,12 +15,14 @@ import java.util.List;
 
 public class TochkaItems {
 
-    public static final List<TochkaItems> TOCHKI = new ArrayList<>(){};
-    public static final Item TOCHKA_LOW= register(new TochkaLow(new FabricItemSettings(), 5,80,5), "tochka_low");
-    public static final Item TOCHKA_2= register(new TochkaLow(new FabricItemSettings(), 10,50,5), "toch_2");
-    public static final Item TOCHKA_3= register(new TochkaLow(new FabricItemSettings(), 15,30,5), "toch_3");
-    public static final Item TOCHKA_4= register(new TochkaLow(new FabricItemSettings(), 20,10,5), "toch_4");
-
+    public static final Item TOCHKA_LOW= register(new TochkaLow(new FabricItemSettings(), 5,80,5,10), "tochka_low");
+    public static final Item TOCHKA_2= register(new TochkaLow(new FabricItemSettings(), 10,50,3,5), "toch_2");
+    public static final Item TOCHKA_3= register(new TochkaLow(new FabricItemSettings(), 15,30,2,5), "toch_3");
+    public static final Item TOCHKA_4= register(new TochkaLow(new FabricItemSettings(), 20,10,1,4), "toch_4");
+    public static final RegistryKey<ItemGroup> ZMOD_GROUP_KEY = RegistryKey.of(
+            Registries.ITEM_GROUP.getKey(),
+            new Identifier(ZarjTest.MOD_ID, "item_group")
+    );
   public static final ItemGroup CUSTOM_ITEM_GROUP = FabricItemGroup.builder()
             .icon(() -> new ItemStack(TochkaItems.TOCHKA_LOW))
             .displayName(Text.translatable("itemGroup.ztest"))
@@ -36,7 +39,7 @@ public class TochkaItems {
         return Registry.register(Registries.ITEM, itemID, item);
     }
     public static void initialize() {
-        Registry.register(Registries.ITEM_GROUP, new Identifier(ZarjTest.MOD_ID, "item_group"),CUSTOM_ITEM_GROUP);
+        Registry.register(Registries.ITEM_GROUP, ZMOD_GROUP_KEY,CUSTOM_ITEM_GROUP);
     }
 
 }

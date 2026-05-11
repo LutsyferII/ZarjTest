@@ -1,6 +1,5 @@
 package zarj.ztest.UI;
 
-import com.google.common.collect.Multimap;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -10,33 +9,26 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ArmorItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtDouble;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.network.message.SentMessage;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import zarj.ztest.runes.TochRune;
 import zarj.ztest.ZarjTest;
-import zarj.ztest.tochka.TochkaItems;
 import zarj.ztest.tochka.TochkaLow;
 import zarj.ztest.utils.ZLogger;
 
 import java.util.Map;
-import java.util.UUID;
 
 public class TochkaScreenHandler extends ScreenHandler {
     private final Inventory inventory;
-    private static final String MODIFIER_PREFIX = "zsharpen.lvl";
-    private static final String MODIFIER_ARMOR_PREFIX = "zsharpen.armor.lvl";
     public TochkaScreenHandler(int syncId, PlayerInventory playerInventory) {
         this(syncId, playerInventory, new SimpleInventory(9));
     }
@@ -47,9 +39,10 @@ public class TochkaScreenHandler extends ScreenHandler {
         inventory.onOpen(playerInventory.player);
         int m;
         int l;
-        this.addSlot(new IconSlot(inventory, 0, 20,  25, "textures/gui/slot1.png", 20));
-        this.addSlot(new IconSlot(inventory, 1, 140,  25, "textures/gui/slot1.png", 20));
+        this.addSlot(new IconSlot(inventory, 0, 20,  25, "textures/gui/slot1.png", 20, true));
+        this.addSlot(new IconSlot(inventory, 1, 140,  25, "textures/gui/slot2.png", 20));
 
+        this.addSlot(new IconSlot(inventory, 2, 80,  25, "textures/gui/slot2.png", 20));
         //this.addSlot(new IconSlot(inventory, 0, 20,  25, Identifier.of("zarjtest", "textures/gui/slot1.png") ));
         for (m = 0; m < 3; ++m) {
             for (l = 0; l < 9; ++l) {
@@ -78,6 +71,9 @@ public class TochkaScreenHandler extends ScreenHandler {
 
         ItemStack inputStack = this.getSlot(0).getStack(); // Слот для предмета
         ItemStack tochkaStack = this.getSlot(1).getStack(); // Слот для точки
+        ItemStack runeStack = this.getSlot(2).getStack(); // Слот для рун
+
+
         ZLogger.Text("ДОШЛО ДО ХЕНДЛЕРА!!");
         if(tochkaStack.isEmpty()){
             player.sendMessageToClient(Text.of("§cОшибка: Отсутствует заточка в слоте!"), false);
@@ -94,6 +90,8 @@ public class TochkaScreenHandler extends ScreenHandler {
             ZLogger.Text("ТЕСТ: НЕ ТОТ ПРЕДМЕТ!!");
             return;
         }
+
+
         ZLogger.Text("ТЕСТ: ПРОВЕРКА ЗАТОЧКИ ПРОЙДЕНА!!");
         EquipmentSlot slot;
         if (inputStack.getItem() instanceof ArmorItem armorItem) {
@@ -117,16 +115,30 @@ public class TochkaScreenHandler extends ScreenHandler {
             player.sendMessage(Text.of("§cОшибка: Уровень предмета выше или равен уровню точки!!!"), false);
             return;
         }
-        NbtList modifiersList = new NbtList();
+        TochRune activeRune = null;
+        boolean hasRune = false;
+        double runeBuff = 0;
+
+
+        if(runeStack.isEmpty()){
+            player.sendMessage(Text.of("§cПРЕДУПРЕЖДЕНИЕ: В слоте руны ничего нет!"), false);
+        }else if(!(runeStack.getItem() instanceof TochRune)){
+            player.sendMessage(Text.of("§cПРЕДУПРЕЖДЕНИЕ: В слоте руны не руна!!!"), false);
+        }else{
+            hasRune = true;
+            activeRune = (TochRune) runeStack.getItem();
+            runeBuff=activeRune.getChanceBoost();
+            runeStack.decrement(1);
+        }
         tochkaStack.decrement(1);
-        if(!tochkaItem.willUpgrade(level)){
+        if(!tochkaItem.willUpgradeWithBuff(level,runeBuff)){
             player.sendMessage(Text.of("§cНеудача. Заточка не удалась!"), false);
-
-            if (level > 0) {
-
+            if(!hasRune){
+                result.decrement(1);
+                this.getSlot(0).setStack(result);
+            }else if (level > 0 && !(activeRune.isSaveLevel())) {
                 int newLevel = level - 1;
                 nbt.putInt("ZSharpenLevel", newLevel);
-
                 if(haveDamage){
                     NbtList damageHistory =  nbt.getList("ZDamageHistory", 6);
                     double decrimer = damageHistory.getDouble(level-1);
@@ -163,9 +175,11 @@ public class TochkaScreenHandler extends ScreenHandler {
                     }
                     nbt.put("AttributeModifiers", attrList);
                 }
-
+                result.setCustomName(Text.of(changeTochkaName(result.getName().getString(),newLevel)));
                 result.setNbt(nbt);
                 this.getSlot(0).setStack(result);
+            }else{
+                return;
             }
             return;
         }
@@ -183,10 +197,11 @@ public class TochkaScreenHandler extends ScreenHandler {
             }
             nbt.put("AttributeModifiers", modifiers);
         }
+
         if(haveDamage){
-            double baseDamage = getTotalBaseDamage(inputStack);
+            double baseDamage = getTotalBaseDamage(inputStack,slot);
             ZLogger.Text("ТЕСТ: final baseDamage = "+baseDamage);
-            double bonus = baseDamage*0.2;
+            double bonus = baseDamage/100*tochkaItem.getUpgrader();
 
             NbtList attrList = nbt.getList("AttributeModifiers",10);
             for(NbtElement elem : attrList){
@@ -207,7 +222,7 @@ public class TochkaScreenHandler extends ScreenHandler {
         }
         if (haveArmor) {
             double baseArmor = getTotalBaseArmor(inputStack, slot);
-            double bonus = baseArmor * 0.1;
+            double bonus = baseArmor/100*tochkaItem.getUpgrader();;
             NbtList attrList = nbt.getList("AttributeModifiers",10);
             for(NbtElement elem : attrList){
                 NbtCompound comp = (NbtCompound) elem;
@@ -224,16 +239,23 @@ public class TochkaScreenHandler extends ScreenHandler {
             armorHist.add(NbtDouble.of(bonus));
             nbt.put("ZArmorHistory", armorHist);
         }
+        result.setCustomName(Text.of(changeTochkaName(result.getName().getString(),newLevel)));
         result.setNbt(nbt);
         this.getSlot(0).setStack(result);
 
     }
-    private String buildModifierName(int level, boolean isDamage, boolean isArmor) {
-        if (isDamage) return MODIFIER_PREFIX + level;
-        if (isArmor) return MODIFIER_ARMOR_PREFIX + level;
-        return MODIFIER_PREFIX + level;
+    public String changeTochkaName(String originalName, int level){
+        String regex = "\\s*\\+\\d+$";
+        if(originalName.matches(".*" +regex)){
+            if(level!=0){
+                return originalName.replaceAll(regex, " +" + level);
+            }else{
+                return originalName.replaceAll(regex, "");
+            }
+        }
+        if (level <= 0) return originalName;
+        return originalName+" +"+level;
     }
-
 
     public NbtCompound AttributeToNBT(EntityAttribute attribute, EntityAttributeModifier modifier, EquipmentSlot slot){
         NbtCompound mod = new NbtCompound();
@@ -258,9 +280,9 @@ public class TochkaScreenHandler extends ScreenHandler {
         return mod;
     }
 
-    private double getTotalBaseDamage(ItemStack stack) {
+    private double getTotalBaseDamage(ItemStack stack, EquipmentSlot slot) {
         double total = 1;
-        var modifiers = stack.getAttributeModifiers(EquipmentSlot.MAINHAND)
+        var modifiers = stack.getAttributeModifiers(slot)
                 .get(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         for (EntityAttributeModifier mod : modifiers) {
             total += mod.getValue();

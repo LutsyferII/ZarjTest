@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {  
-    "layer0": "item/toch_5"
+    "layer0": "zarjtest:item/toch_5"
   }
 }

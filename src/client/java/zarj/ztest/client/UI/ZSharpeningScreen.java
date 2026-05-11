@@ -2,16 +2,22 @@ package zarj.ztest.client.UI;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import zarj.ztest.Net.ModPackets;
 import zarj.ztest.UI.IconSlot;
 import zarj.ztest.UI.TochkaScreenHandler;
+import zarj.ztest.runes.TochRune;
+import zarj.ztest.tochka.TochkaLow;
 import zarj.ztest.utils.ZLogger;
 
 import java.util.logging.Logger;
@@ -19,6 +25,8 @@ import java.util.logging.Logger;
 public class ZSharpeningScreen extends HandledScreen<TochkaScreenHandler> {
 
     private static final Identifier TEXTURE = new Identifier("zarjtest", "textures/gui/first_ui.png");
+
+
 
     public ZSharpeningScreen(TochkaScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
@@ -37,7 +45,30 @@ public class ZSharpeningScreen extends HandledScreen<TochkaScreenHandler> {
         }
         //context.drawTexture(PERMANENT_ICON, x + 18, y + 23, 0, 0, 20, 20, 20, 20);
     }
+    @Override
+    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
 
+        ItemStack itemStack = this.handler.getSlot(0).getStack();
+        ItemStack tochStack = this.handler.getSlot(1).getStack();
+        ItemStack runeStack = this.handler.getSlot(2).getStack();
+        if(runeStack.isEmpty() || !(runeStack.getItem() instanceof TochRune)){
+            context.drawText(this.textRenderer,Text.of("БЕЗ РУНЫ ПРЕДМЕТ МОЖЕТ СЛОМАТЬСЯ!!!"),-5,6, 0xFF5555,false);
+        }
+        if(!itemStack.isEmpty()&&!tochStack.isEmpty()&& (tochStack.getItem() instanceof TochkaLow)){
+
+            TochkaLow tochka = (TochkaLow) tochStack.getItem();
+            NbtCompound nbt = itemStack.getOrCreateNbt();
+            int level = nbt.getInt("ZSharpenLevel");
+
+            double runeBuff = 0;
+            if(runeStack.getItem() instanceof TochRune){
+                runeBuff = ((TochRune) runeStack.getItem()).getChanceBoost();
+            }
+            double chance = tochka.realChance(level, runeBuff);
+            context.drawText(this.textRenderer,Text.of("Шанс заточки: "+chance),14,50, 0x55FF55,false);
+        }
+
+    }
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context); // Затемнение заднего плана
@@ -55,7 +86,7 @@ public class ZSharpeningScreen extends HandledScreen<TochkaScreenHandler> {
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Заточить"), button -> {
                     onButtonClick();
                 })
-                .dimensions(x +55, y + 45, 60, 20) // Позиция внутри UI и размер
+                .dimensions(x +58, y + 63, 55, 16) // Позиция внутри UI и размер
                 .build());
     }
 
