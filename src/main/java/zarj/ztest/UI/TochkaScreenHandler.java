@@ -136,47 +136,19 @@ public class TochkaScreenHandler extends ScreenHandler {
             if(!hasRune){
                 result.decrement(1);
                 this.getSlot(0).setStack(result);
+                player.sendMessage(Text.of("§cРУНА ОТСУТСТВУЕТ! ПРЕДМЕТ СЛОМАН!"), false);
             }else if (level > 0 && !(activeRune.isSaveLevel())) {
                 int newLevel = level - 1;
                 nbt.putInt("ZSharpenLevel", newLevel);
                 if(haveDamage){
-                    NbtList damageHistory =  nbt.getList("ZDamageHistory", 6);
-                    double decrimer = damageHistory.getDouble(level-1);
-                    damageHistory.remove(level-1);
-                    nbt.put("ZDamageHistory", damageHistory);
-                    NbtList attrList = nbt.getList("AttributeModifiers",10);
-                    for(NbtElement elem : attrList){
-                        NbtCompound comp = (NbtCompound) elem;
-                        String attrName = comp.getString("AttributeName");
-                        String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ATTACK_DAMAGE).toString();
-                        if(attrName.equals(expected )){
-                            double amount = comp.getDouble("Amount") - decrimer;
-                            comp.putDouble("Amount", amount);
-                            break;
-                        }
-                    }
-                    nbt.put("AttributeModifiers", attrList);
+
+                    downgradeAttribute(nbt,level,EntityAttributes.GENERIC_ATTACK_DAMAGE,"Damage");
                 }
                 if(haveArmor){
-                    NbtList armorHistory =  nbt.getList("ZArmorHistory", 6);
-                    double decrimer = armorHistory.getDouble(level-1);
-                    armorHistory.remove(level-1);
-                    nbt.put("ZArmorHistory", armorHistory);
-                    NbtList attrList = nbt.getList("AttributeModifiers",10);
-                    for(NbtElement elem : attrList){
-                        NbtCompound comp = (NbtCompound) elem;
-                        String attrName = comp.getString("AttributeName");
-                        String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ARMOR).toString();
-                        if(attrName.equals(expected )){
-                            double amount = comp.getDouble("Amount") - decrimer;
-                            comp.putDouble("Amount", amount);
-                            break;
-                        }
-                    }
-                    nbt.put("AttributeModifiers", attrList);
+
+                    downgradeAttribute(nbt,level,EntityAttributes.GENERIC_ARMOR,"Armor");
                 }
                 result.setCustomName(Text.of(changeTochkaName(result.getName().getString(),newLevel)));
-                result.setNbt(nbt);
                 this.getSlot(0).setStack(result);
             }else{
                 return;
@@ -199,48 +171,14 @@ public class TochkaScreenHandler extends ScreenHandler {
         }
 
         if(haveDamage){
-            double baseDamage = getTotalBaseDamage(inputStack,slot);
-            ZLogger.Text("ТЕСТ: final baseDamage = "+baseDamage);
-            double bonus = baseDamage/100*tochkaItem.getUpgrader();
-
-            NbtList attrList = nbt.getList("AttributeModifiers",10);
-            for(NbtElement elem : attrList){
-                NbtCompound comp = (NbtCompound) elem;
-                String attrName = comp.getString("AttributeName");
-                String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ATTACK_DAMAGE).toString();
-                if(attrName.equals(expected )){
-                    double amount = comp.getDouble("Amount") + bonus;
-                    comp.putDouble("Amount", amount);
-                    break;
-                }
-            }
-            nbt.put("AttributeModifiers", attrList);
-            NbtList damHist =nbt.getList("ZDamageHistory",6);
-            damHist.add(NbtDouble.of(bonus));
-            nbt.put("ZDamageHistory", damHist);
-
+            double baseDamage = getTotalBaseStat(inputStack,slot,EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            upgradeAttribute(nbt,tochkaItem,baseDamage,EntityAttributes.GENERIC_ATTACK_DAMAGE,"Damage");
         }
         if (haveArmor) {
-            double baseArmor = getTotalBaseArmor(inputStack, slot);
-            double bonus = baseArmor/100*tochkaItem.getUpgrader();;
-            NbtList attrList = nbt.getList("AttributeModifiers",10);
-            for(NbtElement elem : attrList){
-                NbtCompound comp = (NbtCompound) elem;
-                String attrName = comp.getString("AttributeName");
-                String expected = Registries.ATTRIBUTE.getId(EntityAttributes.GENERIC_ARMOR).toString();
-                if(attrName.equals(expected )){
-                    double amount = comp.getDouble("Amount") + bonus;
-                    comp.putDouble("Amount", amount);
-                    break;
-                }
-            }
-            nbt.put("AttributeModifiers", attrList);
-            NbtList armorHist =nbt.getList("ZArmorHistory",6);
-            armorHist.add(NbtDouble.of(bonus));
-            nbt.put("ZArmorHistory", armorHist);
+            double baseArmor = getTotalBaseStat(inputStack, slot,EntityAttributes.GENERIC_ARMOR);
+            upgradeAttribute(nbt,tochkaItem,baseArmor,EntityAttributes.GENERIC_ARMOR,"Armor");
         }
         result.setCustomName(Text.of(changeTochkaName(result.getName().getString(),newLevel)));
-        result.setNbt(nbt);
         this.getSlot(0).setStack(result);
 
     }
@@ -257,6 +195,52 @@ public class TochkaScreenHandler extends ScreenHandler {
         return originalName+" +"+level;
     }
 
+    public void upgradeAttribute(NbtCompound nbt, TochkaLow tochkaItem, double baseStat, EntityAttribute entityAttribute, String historyName){
+        double bonus = baseStat/100*tochkaItem.getUpgrader();
+
+        NbtList attrList = nbt.getList("AttributeModifiers",10);
+        for(NbtElement elem : attrList){
+            NbtCompound comp = (NbtCompound) elem;
+            String attrName = comp.getString("AttributeName");
+            String expected = Registries.ATTRIBUTE.getId(entityAttribute).toString();
+            if(attrName.equals(expected )){
+                double amount = comp.getDouble("Amount") + bonus;
+                comp.putDouble("Amount", amount);
+                break;
+            }
+        }
+        nbt.put("AttributeModifiers", attrList);
+        NbtList damHist =nbt.getList("Z"+historyName+"History",6);
+        if (damHist == null) {
+            damHist = new NbtList();
+        }
+        damHist.add(NbtDouble.of(bonus));
+        nbt.put("Z"+historyName+"History", damHist);
+    }
+    public void downgradeAttribute(NbtCompound nbt, int level, EntityAttribute entityAttribute, String historyName){
+        NbtList damageHistory =  nbt.getList("Z"+historyName+"History", 6);
+        double decrimer = 0.0;
+        if(damageHistory!=null && level - 1 < damageHistory.size()) {
+            decrimer = damageHistory.getDouble(level - 1);
+            damageHistory.remove(level - 1);
+            nbt.put("Z" + historyName + "History", damageHistory);
+        }
+        NbtList attrList = nbt.getList("AttributeModifiers",10);
+        if (attrList == null) {
+            return;
+        }
+        for(NbtElement elem : attrList){
+            NbtCompound comp = (NbtCompound) elem;
+            String attrName = comp.getString("AttributeName");
+            String expected = Registries.ATTRIBUTE.getId(entityAttribute).toString();
+            if(attrName.equals(expected )){
+                double amount = comp.getDouble("Amount") - decrimer;
+                comp.putDouble("Amount", amount);
+                break;
+            }
+        }
+        nbt.put("AttributeModifiers", attrList);
+    }
     public NbtCompound AttributeToNBT(EntityAttribute attribute, EntityAttributeModifier modifier, EquipmentSlot slot){
         NbtCompound mod = new NbtCompound();
 
@@ -280,20 +264,10 @@ public class TochkaScreenHandler extends ScreenHandler {
         return mod;
     }
 
-    private double getTotalBaseDamage(ItemStack stack, EquipmentSlot slot) {
-        double total = 1;
-        var modifiers = stack.getAttributeModifiers(slot)
-                .get(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        for (EntityAttributeModifier mod : modifiers) {
-            total += mod.getValue();
-        }
-        return total;
-    }
 
-    private double getTotalBaseArmor(ItemStack stack, EquipmentSlot slot) {
-        double total = 0;
-        var modifiers = stack.getAttributeModifiers(slot)
-                .get(EntityAttributes.GENERIC_ARMOR);
+    private double getTotalBaseStat(ItemStack stack, EquipmentSlot slot, EntityAttribute attr) {
+        double total = attr == EntityAttributes.GENERIC_ATTACK_DAMAGE ? 1 : 0;
+        var modifiers = stack.getAttributeModifiers(slot).get(attr);
         for (EntityAttributeModifier mod : modifiers) {
             total += mod.getValue();
         }
