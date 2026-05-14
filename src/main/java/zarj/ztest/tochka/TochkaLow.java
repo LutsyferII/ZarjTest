@@ -33,18 +33,6 @@ public class TochkaLow  extends Item {
         this.decr = decr;
         this.upgrader = upgrader;
     }
-    @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (!world.isClient) {
-            user.openHandledScreen(createScreenHandlerFactory(user, hand));
-        }
-        return TypedActionResult.success(user.getStackInHand(hand));
-    }
-    private NamedScreenHandlerFactory createScreenHandlerFactory(PlayerEntity player, Hand hand) {
-        return new SimpleNamedScreenHandlerFactory((syncId, inv, p) -> {
-            return new TochkaScreenHandler(syncId, inv);
-        }, Text.literal("Заточка оружия"));
-    }
     public boolean isEnoughLevel(int lvl){
         return lvl<maxLevel;
     }

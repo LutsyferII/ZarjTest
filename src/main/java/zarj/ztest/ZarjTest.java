@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zarj.ztest.Net.ModPackets;
 import zarj.ztest.UI.TochkaScreenHandler;
+import zarj.ztest.blocks.BlocksHandler;
 import zarj.ztest.runes.RuneItems;
 import zarj.ztest.tochka.TochkaItems;
 
@@ -29,6 +30,7 @@ public class ZarjTest implements ModInitializer {
 
         TochkaItems.initialize();
         RuneItems.initialize();
+        BlocksHandler.initialize();
         ModPackets.registerC2SPackets();
 
 

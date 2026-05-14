@@ -1,5 +1,13 @@
 {
-    "item.zarjtest.tochka_low": "Малый камень заточки",
+    "item.zarjtest.tochka_low": "Крошечный камень заточки",
+    "item.zarjtest.toch_2": "Малый камень заточки",
+    "item.zarjtest.toch_3": "Средний камень заточки",
+    "item.zarjtest.toch_4": "Большой камень заточки",
+    "item.zarjtest.rune_1": "Малая руна",
+    "item.zarjtest.rune_2": "Средняя руна",
+    "item.zarjtest.rune_3": "Большая руна",
+    "block.zarjtest.toch_stol": "Стол заточки",
+
     "itemTooltip.zmod.tochka-low": "Камень для заточки оружие и брони.",
     "itemGroup.ztest": "Заточки"
 }

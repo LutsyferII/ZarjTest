@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "zarjtest:block/toch_stol_side",
+    "down": "zarjtest:block/toch_stol_bottom",
+    "up": "zarjtest:block/toch_stol_top",
+    "north": "zarjtest:block/toch_stol_side",
+    "south": "zarjtest:block/toch_stol_side",
+    "east": "zarjtest:block/toch_stol_side",
+    "west": "zarjtest:block/toch_stol_side"
+  }
+}
