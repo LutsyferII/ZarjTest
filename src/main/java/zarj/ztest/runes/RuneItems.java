@@ -27,8 +27,8 @@ public class RuneItems {
             content.add(RUNE_2);
             content.add(RUNE_3);
         });
-        ZarjTest.ALL_DROPS.addDrop(RUNE_1,0.15);
-        ZarjTest.ALL_DROPS.addDrop(RUNE_2,0.10);
-        ZarjTest.ALL_DROPS.addDrop(RUNE_3,0.5);
+        ZarjTest.ALL_DROPS.addDrop(RUNE_1,1.08);
+        ZarjTest.ALL_DROPS.addDrop(RUNE_2,1.04);
+        ZarjTest.ALL_DROPS.addDrop(RUNE_3,1.02);
     }
 }

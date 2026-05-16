@@ -26,10 +26,10 @@ public class ZarjTest implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("zarjtest");
     private static final Map<Item, Double> TOCHKA_CHANCES = new HashMap<>();
     static {
-        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_LOW, 0.15);
-        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_2, 0.12);
-        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_3, 0.09);
-        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_4, 0.06);
+        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_LOW, 1.1);
+        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_2, 0.8);
+        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_3, 0.5);
+        TOCHKA_CHANCES.put(TochkaItems.TOCHKA_4, 0.3);
     }
     public static DropChanges ALL_DROPS = new DropChanges();
 
