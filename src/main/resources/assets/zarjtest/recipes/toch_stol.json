@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ICI",
+    "D D",
+    "OOO"
+  ],
+  "key": {
+    "I": { "item": "zarjtest:tochka_low" },
+    "D": { "item": "minecraft:diamond" },
+    "O": { "item": "minecraft:obsidian" },
+    "C": { "item": "zarjtest:rune_1" }
+  },
+  "result": {
+    "item": "zarjtest:toch_stol",
+    "count": 1
+  }
+}
