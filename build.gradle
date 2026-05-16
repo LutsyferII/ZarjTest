@@ -7,13 +7,20 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+    mavenLocal()
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 }
-
+configurations.configureEach {
+    resolutionStrategy {
+        // Говорим Градлу: кэш для динамических версий и SNAPSHOT-ов равен 0 секунд.
+        // Перепроверять при каждом синке!
+        cacheChangingModulesFor 0, 'seconds'
+    }
+}
 loom {
 	splitEnvironmentSourceSets()
 
@@ -34,7 +41,8 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	
+
+    modImplementation "zarj.zarjlib:zarjlib:1.0.1-+"
 }
 
 processResources {

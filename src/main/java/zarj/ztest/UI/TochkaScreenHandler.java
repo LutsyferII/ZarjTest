@@ -20,6 +20,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import zarj.zarjlib.nbts.StaticNbtMethods;
 import zarj.ztest.runes.TochRune;
 import zarj.ztest.ZarjTest;
 import zarj.ztest.tochka.TochkaLow;
@@ -72,7 +73,6 @@ public class TochkaScreenHandler extends ScreenHandler {
         ItemStack inputStack = this.getSlot(0).getStack(); // Слот для предмета
         ItemStack tochkaStack = this.getSlot(1).getStack(); // Слот для точки
         ItemStack runeStack = this.getSlot(2).getStack(); // Слот для рун
-
 
         ZLogger.Text("ДОШЛО ДО ХЕНДЛЕРА!!");
         if(tochkaStack.isEmpty()){
