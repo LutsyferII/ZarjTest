@@ -24,5 +24,6 @@ public class BlocksHandler {
         ItemGroupEvents.modifyEntriesEvent(TochkaItems.ZMOD_GROUP_KEY).register(content -> {
             content.add(STOL_BLOCK );
         });
+
     }
 }

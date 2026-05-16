@@ -45,6 +45,8 @@ public class ZarjTest implements ModInitializer {
         ModPackets.registerC2SPackets();
         StaticDropChanges.changeDrop(TOCHKA_CHANCES);
 
+        ALL_DROPS.ensureAllRegistered();
+
 	}
 
 

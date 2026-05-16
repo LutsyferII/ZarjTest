@@ -10,6 +10,7 @@ import zarj.ztest.ZarjTest;
 import zarj.ztest.tochka.TochkaItems;
 import zarj.ztest.tochka.TochkaLow;
 
+
 public class RuneItems {
     public static final Item RUNE_1= register(new TochRune(new FabricItemSettings(), false,0), "rune_1");
     public static final Item RUNE_2= register(new TochRune(new FabricItemSettings(), true,0), "rune_2");
@@ -26,5 +27,8 @@ public class RuneItems {
             content.add(RUNE_2);
             content.add(RUNE_3);
         });
+        ZarjTest.ALL_DROPS.addDrop(RUNE_1,0.15);
+        ZarjTest.ALL_DROPS.addDrop(RUNE_2,0.10);
+        ZarjTest.ALL_DROPS.addDrop(RUNE_3,0.5);
     }
 }
