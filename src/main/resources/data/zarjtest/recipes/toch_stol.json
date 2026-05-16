@@ -2,13 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "ICI",
-    "D D",
+    "DED",
     "OOO"
   ],
   "key": {
     "I": { "item": "zarjtest:tochka_low" },
     "D": { "item": "minecraft:diamond" },
     "O": { "item": "minecraft:obsidian" },
+    "E": { "item": "minecraft:emerald" },
     "C": { "item": "zarjtest:rune_1" }
   },
   "result": {
