@@ -18,11 +18,23 @@ public class BlocksHandler {
 
     public static final Item STOL_BLOCK_ITEM = new BlockItem(STOL_BLOCK, new Item.Settings());
 
+    public static final Block STAR_OPEN_STOL_BLOCK = new StarOpenStolBlock(AbstractBlock.Settings.create()
+            .hardness(3.0f)
+            .requiresTool());
+
+    public static final Item STAR_OPEN_STOL_BLOCK_ITEM = new BlockItem(STAR_OPEN_STOL_BLOCK , new Item.Settings());
+
     public static void initialize() {
         Registry.register(Registries.BLOCK, Identifier.of(ZarjTest.MOD_ID, "toch_stol"), STOL_BLOCK);
         Registry.register(Registries.ITEM, Identifier.of(ZarjTest.MOD_ID, "toch_stol"), STOL_BLOCK_ITEM);
+
+        Registry.register(Registries.BLOCK, Identifier.of(ZarjTest.MOD_ID, "star_open_stol"), STAR_OPEN_STOL_BLOCK );
+        Registry.register(Registries.ITEM, Identifier.of(ZarjTest.MOD_ID, "star_open_stol"), STAR_OPEN_STOL_BLOCK_ITEM);
+
+
         ItemGroupEvents.modifyEntriesEvent(TochkaItems.ZMOD_GROUP_KEY).register(content -> {
             content.add(STOL_BLOCK );
+            content.add(STAR_OPEN_STOL_BLOCK );
         });
 
     }
