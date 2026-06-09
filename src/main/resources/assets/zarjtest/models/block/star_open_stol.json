@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "zarjtest:block/star_open_stol_side",
+    "down": "zarjtest:block/star_open_stol_bottom",
+    "up": "zarjtest:block/star_open_stol_top",
+    "north": "zarjtest:block/star_open_stol_side",
+    "south": "zarjtest:block/star_open_stol_side",
+    "east": "zarjtest:block/star_open_stol_side",
+    "west": "zarjtest:block/star_open_stol_side"
+  }
+}
