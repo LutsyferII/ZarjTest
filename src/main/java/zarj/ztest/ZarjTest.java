@@ -13,10 +13,12 @@ import org.slf4j.LoggerFactory;
 import zarj.zarjlib.drops.DropChanges;
 import zarj.zarjlib.drops.StaticDropChanges;
 import zarj.ztest.Net.ModPackets;
+import zarj.ztest.UI.StarOpenScreenHandler;
 import zarj.ztest.UI.TochkaScreenHandler;
 import zarj.ztest.blocks.BlocksHandler;
 import zarj.ztest.runes.RuneItems;
 import zarj.ztest.tochka.TochkaItems;
+import zarj.ztest.utils.ItemsEngine;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,12 +38,13 @@ public class ZarjTest implements ModInitializer {
     public static final ScreenHandlerType<TochkaScreenHandler> TOCHKA_SCREEN_HANDLER =
             Registry.register(Registries.SCREEN_HANDLER, new Identifier("zarjtest", "sharpening"),
                     new ScreenHandlerType<>(TochkaScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
+
+    public static final ScreenHandlerType<StarOpenScreenHandler> STAR_OPEN_SCREEN_HANDLER =
+            Registry.register(Registries.SCREEN_HANDLER, new Identifier("zarjtest", "staropen"),
+                    new ScreenHandlerType<>(StarOpenScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
     @Override
 	public void onInitialize() {
-
-        TochkaItems.initialize();
-        RuneItems.initialize();
-        BlocksHandler.initialize();
+        ItemsEngine.InitializeALL();
         ModPackets.registerC2SPackets();
         StaticDropChanges.changeDrop(TOCHKA_CHANCES);
 
