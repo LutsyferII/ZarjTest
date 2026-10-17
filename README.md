@@ -36,8 +36,40 @@
 1. Используй `star_opener` на броне → создаётся максимальное количество слотов
 2. Используй `star_slot_extender` на броне → создаётся пустой слот в пределах максимального количества
 3. Используй `star_roller` → выковывается звезда (white/green/blue/purple/gold)
-
-
-
+   
+**GUI:**
+- Динамические слоты, меняющие цвет в зависимости от предмета:
+  - 🟢 Зелёный — Opener/броня
+  - 🔵 Синий — Roller
+  - 🔴 Красный — неподходящий предмет
+    
 **Статус:** Реализованы предметы и базовый GUI, механика ролла не завершена.
+
+## Техническая реализация
+
+### Архитектура
+- **Клиент-серверная логика** — вся логика на сервере
+- **Кастомные ScreenHandler** — динамические GUI
+- **IconSlot** — слоты с динамическими текстурами
+- **NBT-данные** — хранение звёзд и уровней заточки
+
+### Пример кода (StarOpenScreenHandler)
+```java
+this.addSlot(new IconSlot(inventory, 0, 30, 32, "textures/gui/slot3.png", 20){
+    @Override
+    public void setStack(ItemStack stack) {
+        super.setStack(stack);
+        if(stack.isOf(StarsItems.STAR_OPENER)){
+            this.changeTexture(GREEN_SLOT);
+        }else if(stack.isOf(StarsItems.STAR_ROLLER)){
+            this.changeTexture(BLUE_SLOT);
+        }else{
+            this.changeTexture(RED_SLOT);
+        }
+    }
+});
+
+
+
+
 
